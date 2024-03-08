@@ -8,11 +8,18 @@ use std::io::BufWriter;
 #[test]
 fn create_png() {
     let mut img = Image::with_dimensions(1080, 1080);
-    let mut rect = Rectangle::with_coordinates(
-        (40,40), (0,1040), (1040,1040), (1040,40)
-    );
-    rect.set_color(Pixel::from(&[255,0,0,255]));
-    rect.paste(&mut img);
+    let mut rect1 = Rect::with_coordinates((0,0), (1080,270));
+    let mut rect2 = Rect::with_coordinates((0,270), (1080,540));
+    let mut rect3 = Rect::with_coordinates((0,540), (1080,810));
+    let mut rect4 = Rect::with_coordinates((0,810), (1080, 1080));
+    rect1.set_color(Pixel::from(&[0,75,150,255]));
+    rect2.set_color(Pixel::from(&[150,0,150,255]));
+    rect3.set_color(Pixel::from(&[150,75,0,255]));
+    rect4.set_color(Pixel::from(&[0,150,0,255]));
+    rect1.paste(&mut img);
+    rect2.paste(&mut img);
+    rect3.paste(&mut img);
+    rect4.paste(&mut img);
 
     let path = Path::new(r"test.png");
     let file = File::create(path).unwrap();
