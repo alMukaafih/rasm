@@ -14,7 +14,7 @@ use crate::util::*;
 
 pub trait Diagram {
     fn draw(&mut self, canvas: &mut Canvas);
-    fn resize(&mut self, scale: [f64; 2]);
+    fn resize(&mut self, scale: [usize; 2]);
 }
 
 #[allow(dead_code)]
@@ -99,8 +99,8 @@ impl SubAssign for Point {
 pub struct Rect {
     origin: Point,
     color: Pixel,
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
 }
 impl Rect {
     pub fn new() -> Rect {
@@ -155,56 +155,51 @@ impl Diagram for Rect {
             }
         }
     }
-    fn resize(&mut self, scale: [f64; 2]) {
+    fn resize(&mut self, scale: [usize; 2]) {
         
     }
 }
 
-#[allow(dead_code)]
-//#[derive(Clone, Debug)]
-pub struct Photo {
-    buf: VecDeque<u8>,
-    width: usize,
-    origin: Point,
-}
-impl From<(Vec<u8>, usize, (usize, usize))> for Photo {
-    fn from(img: (Vec<u8>, usize, (usize, usize))) -> Self {
-        Photo {
-            buf: VecDeque::from(img.0),
-            width: img.1,
-            origin: Point::from(img.2),
+impl From<((usize, usize), (usize, usize), Vec<u8>)> for Image {
+    fn from(img: ((usize, usize), (usize, usize), Vec<u8>)) -> Self {
+        Image {
+            width: img.0.0,
+            height: img.0.1,
+            origin: Point::from(img.1),
+            layers: vec![Layer::from((img.0.0, img.0.1, img.2))]
         }
     }
 }
-impl Diagram for Photo {
+impl Diagram for Image {
     fn draw(&mut self, canvas: &mut Canvas) {
         let layer = &mut canvas.fmt().image()[0];
-        let height = (self.buf.len() / (4 * self.width)) as usize;
-        for rows in 0..height {
+        let lay = &self.layers[0];
+        for rows in 0..self.height {
             for pixels in 0..self.width {
                 layer[self.origin[0] + rows][self.origin[1] + pixels]
-                    += Pixel::from(&[
-                        self.buf.pop_front().unwrap(),
-                        self.buf.pop_front().unwrap(),
-                        self.buf.pop_front().unwrap(),
-                        self.buf.pop_front().unwrap()
-                    ]);
+                    += lay[rows][pixels];
             }
         }
     }
-    fn resize(&mut self, scale: [f64; 2]) {
+    fn resize(&mut self, scale: [usize; 2]) {
         let w1 = self.width;
-        let h1 = (self.buf.len()/(4*self.width)) as usize;
-        let w2 = (w1 as f64 * (scale[0]/w1 as f64)) as usize;
-        let h2;
-        if scale[1] != 0.0 {
-            h2 = (h1 as f64 * (scale[1]/h1 as f64)) as usize;
-        } else {
-            h2 = (h1 as f64 * (scale[0]/w1 as f64)) as usize;
+        let h1 = self.height;
+        if scale[0] == 0 && scale[1] == 0 {
+            panic!()
         }
+        let mut w2 = scale[0];
+        let mut h2 = scale[1];
+        if scale[0] == 0 {
+            w2 = (w1 as f64 * (h2 as f64 /h1 as f64)) as usize;
+        }
+        if scale[1] == 0 {
+            h2 = (h1 as f64 * (w2 as f64 /w1 as f64)) as usize;
+        }
+        self.width = w2;
+        self.height = h2;
     
             // Don't forget to fill `src` with image data (RGB8).
-        let _src = Vec::from(self.buf.make_contiguous());
+        let _src = self.to_vec();
         let src = _src.as_rgba();
         // Destination buffer. Must be mutable.
         let mut _dst = vec![0;w2*h2*4];
@@ -212,14 +207,21 @@ impl Diagram for Photo {
         // Create reusable instance.
         let mut resizer = resize::new(
             w1, h1,
-            w1, h2,
+            w2, h2,
             RGBA8, 
             Lanczos3
             ).unwrap();
         // Do resize without heap allocations.
         // Might be executed multiple times for different `src` or `dst`.
         let r = resizer.resize(&src, &mut dst);
-        println!("{:?}", r)
-        //self.buf = VecDeque::from(dst);
+        println!("{:?}", r);
+        println!("{}, {} / {}, {}", w1, h1, w2, h2);
+        let mut buf = Vec::new();
+        for rgba in dst {
+            for i in rgba.iter() {
+                buf.push(i)
+            }
+        }
+        self.layers = vec![Layer::from((w2, h2, buf))]
     }
 }

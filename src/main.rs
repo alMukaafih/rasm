@@ -5,6 +5,7 @@ pub mod format;
 pub mod util;
 pub mod parse;
 pub mod file;
+//pub mod palette;
 #[cfg(test)]
 pub mod tests;
 
@@ -21,6 +22,8 @@ fn main() {
     let filename = args.nth(1).unwrap();
     let input = parse_rasm(format!("{filename}.rasm.toml"));
     let mut canvas = Canvas::new("png", input.size[0], input.size[1]);
+    let width = canvas.width;
+    let height = canvas.height;
     canvas.new_rect(
         (0.0, 0.0),
         (100.0, 100.0),
@@ -48,12 +51,16 @@ fn main() {
             
             
             let photo = canvas.add_photo(
-                file.1,
                 file.0,
-                shape.origin.unwrap()
+                shape.origin.unwrap(),
+                file.1,
             );
             if shape.resize != None {
-                photo.resize(shape.resize.unwrap())
+                let scale = shape.resize.unwrap();
+                let w2 = (width as f64 * (scale[0]/100.0)) as usize;
+                let h2 = (height as f64 * (scale[1]/100.0)) as usize;
+                photo.resize([w2, h2]);
+                println!("{}, {}", w2, h2);
             }
         }
     }

@@ -246,6 +246,18 @@ impl Layer {
         self.height
     }
 }
+impl From<(usize, usize, Vec<u8>)> for Layer {
+    fn from(image: (usize, usize, Vec<u8>)) -> Self {
+        let mut layer = Layer::new();
+        layer.width = image.0;
+        layer.height = image.1;
+        for i in image.2.chunks_exact(4 * image.0) {
+            let row = Row::from(i);
+            layer.add_row(row)
+        }
+        layer
+    }
+}
 impl From<(usize, usize, &[u8])> for Layer {
     fn from(image: (usize, usize, &[u8])) -> Self {
         let mut layer = Layer::new();
@@ -306,25 +318,35 @@ impl IntoIterator for Layer {
 #[derive(Clone)]
 /// Image representation.
 pub struct Image {
-    width: usize,
-    height: usize,
-    layers: Vec<Layer>
+    pub width: usize,
+    pub height: usize,
+    pub origin: Point,
+    pub layers: Vec<Layer>
 }
 impl Image {
     /// Creates a new [Image] instance.
     pub fn new() -> Image {
-        Image { width: 0, height: 0, layers: vec![] }
+        Image { 
+            width: 0,
+            height: 0,
+            origin: Point::from((0,0)),
+            layers: vec![]
+        }
     }
     /// Creates an [Image] with given dimensions.
     pub fn with_dimensions(width: usize, height: usize) -> Image {
         Image {
-            width: width,
-            height: height,
+            width,
+            height,
+            origin: Point::from((0,0)),
             layers: vec![Layer::with_dimensions(width, height)]
         }
     }
     /// Collapses all layers to a single layer.
     pub fn collapse(&mut self) {
+        if self.layers.len() == 1 {
+            return
+        }
         let mut img = Image::with_dimensions(self.width, self.height);
         for layers in 0..self.layers.len() {
         for rows in 0..self[layers].height {
@@ -373,6 +395,18 @@ impl Image {
                 bytes.push(self[0][rows][pixels][1]);
                 bytes.push(self[0][rows][pixels][2]);
                 bytes.push(self[0][rows][pixels][3])
+            }
+        }
+        bytes
+    }
+    pub fn as_pixels(&mut self) -> Vec<Pixel> {
+        if self.layers.len() > 1 {
+            self.collapse();
+        }
+        let mut bytes: Vec<Pixel> = Vec::new();
+        for rows in 0..self[0].height {
+            for pixels in 0..self[0][rows].len() {
+                bytes.push(self[0][rows][pixels]);
             }
         }
         bytes

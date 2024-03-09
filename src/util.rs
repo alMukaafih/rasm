@@ -8,8 +8,8 @@ use crate::image::*;
 #[allow(dead_code)]
 //#[derive(Clone, Debug)]
 pub struct Canvas {
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
     format: Box<dyn Format>,
     shapes: VecDeque<Box<dyn Diagram>>
 }
@@ -44,12 +44,13 @@ impl Canvas {
         let idx = self.shapes.len();
         &mut self.shapes[idx - 1]
     }
-    pub fn add_photo(&mut self, img: Vec<u8>, width: usize, origin: (f64, f64)) -> &mut Box<dyn Diagram> {
-        let height = img.len()/(4*width);
+    pub fn add_photo(&mut self, dimensions: (usize, usize), origin: (f64, f64), img: Vec<u8>) -> &mut Box<dyn Diagram> {
+        let width = dimensions.0;
+        let height = dimensions.1;
         let ox = (width as f64 * (origin.0 / 100.0)) as usize;
         let oy = (height as f64 * (origin.1 / 100.0)) as usize;
         
-        let photo = Photo::from((img, width, (ox, oy)));
+        let photo = Image::from((dimensions, (ox, oy), img));
         self.shapes.push_back(Box::new(photo));
         let idx = self.shapes.len();
         &mut self.shapes[idx - 1]
