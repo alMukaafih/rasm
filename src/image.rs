@@ -1,9 +1,9 @@
-use std::ops::{Index, IndexMut};
-use std::ops::{Add, AddAssign};
-use std::ops::{Deref, DerefMut};
-use std::iter::{Iterator, IntoIterator};
 use std::convert::From;
 use std::fmt;
+use std::iter::{IntoIterator, Iterator};
+use std::ops::{Add, AddAssign};
+use std::ops::{Deref, DerefMut};
+use std::ops::{Index, IndexMut};
 
 use crate::shape::*;
 
@@ -20,7 +20,13 @@ pub struct Pixel {
 impl Pixel {
     /// Creates a new [Pixel] instance.
     pub fn new() -> Pixel {
-        Pixel { red: 0, green: 0, blue: 0, alpha: 0, count: 0 }
+        Pixel {
+            red: 0,
+            green: 0,
+            blue: 0,
+            alpha: 0,
+            count: 0,
+        }
     }
     /// Sets red value of [Pixel].
     pub fn set_red(&mut self, red: u8) -> &mut Pixel {
@@ -45,17 +51,29 @@ impl Pixel {
 }
 impl From<&[u8]> for Pixel {
     fn from(pixel: &[u8]) -> Self {
-        Pixel { red: pixel[0], green: pixel[1], blue: pixel[2], alpha: pixel[3], count: 0 }
+        Pixel {
+            red: pixel[0],
+            green: pixel[1],
+            blue: pixel[2],
+            alpha: pixel[3],
+            count: 0,
+        }
     }
 }
 impl From<&[u8; 4]> for Pixel {
     fn from(pixel: &[u8; 4]) -> Self {
-        Pixel { red: pixel[0], green: pixel[1], blue: pixel[2], alpha: pixel[3], count: 0 }
+        Pixel {
+            red: pixel[0],
+            green: pixel[1],
+            blue: pixel[2],
+            alpha: pixel[3],
+            count: 0,
+        }
     }
 }
 impl Index<usize> for Pixel {
     type Output = u8;
-    
+
     fn index(&self, idx: usize) -> &Self::Output {
         match idx {
             0 => &self.red,
@@ -68,17 +86,16 @@ impl Index<usize> for Pixel {
 }
 impl IndexMut<usize> for Pixel {
     //type Output = Pixel;
-    
+
     fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
         match idx {
             0 => &mut self.red,
             1 => &mut self.green,
             2 => &mut self.blue,
             3 => &mut self.alpha,
-            4_usize.. => panic!("index out of bounds: the len is 4 but the index is {}", idx)
+            4_usize.. => panic!("index out of bounds: the len is 4 but the index is {}", idx),
         }
     }
-    
 }
 impl Add for Pixel {
     type Output = Self;
@@ -86,9 +103,12 @@ impl Add for Pixel {
     fn add(self, pixel: Self) -> Self {
         let alpha = pixel[3] as u64;
         Self {
-            red: ((alpha * pixel[0] as u64) + ((255 - alpha) * self.red as u64)).div_ceil(255) as u8,
-            green: ((alpha * pixel[1] as u64) + ((255 - alpha) * self.green as u64)).div_ceil(255) as u8,
-            blue: ((alpha * pixel[2] as u64) + ((255 - alpha) * self.blue as u64)).div_ceil(255) as u8,
+            red: ((alpha * pixel[0] as u64) + ((255 - alpha) * self.red as u64)).div_ceil(255)
+                as u8,
+            green: ((alpha * pixel[1] as u64) + ((255 - alpha) * self.green as u64)).div_ceil(255)
+                as u8,
+            blue: ((alpha * pixel[2] as u64) + ((255 - alpha) * self.blue as u64)).div_ceil(255)
+                as u8,
             alpha: (alpha * 255 + ((255 - alpha) * self.alpha as u64)).div_ceil(255) as u8,
             count: 0,
         }
@@ -98,9 +118,12 @@ impl AddAssign for Pixel {
     fn add_assign(&mut self, pixel: Self) {
         let alpha = pixel[3] as u64;
         *self = Self {
-            red: ((alpha * pixel[0] as u64) + ((255 - alpha) * self.red as u64)).div_ceil(255) as u8,
-            green: ((alpha * pixel[1] as u64) + ((255 - alpha) * self.green as u64)).div_ceil(255) as u8,
-            blue: ((alpha * pixel[2] as u64) + ((255 - alpha) * self.blue as u64)).div_ceil(255) as u8,
+            red: ((alpha * pixel[0] as u64) + ((255 - alpha) * self.red as u64)).div_ceil(255)
+                as u8,
+            green: ((alpha * pixel[1] as u64) + ((255 - alpha) * self.green as u64)).div_ceil(255)
+                as u8,
+            blue: ((alpha * pixel[2] as u64) + ((255 - alpha) * self.blue as u64)).div_ceil(255)
+                as u8,
             alpha: (alpha * 255 + ((255 - alpha) * self.alpha as u64)).div_ceil(255) as u8,
             count: 0,
         }
@@ -108,11 +131,11 @@ impl AddAssign for Pixel {
 }
 impl Iterator for Pixel {
     type Item = u8;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         // Increment our count. This is why we started at zero.
         self.count += 1;
-        
+
         if self.count == 1 {
             Some(self.red)
         } else if self.count == 2 {
@@ -131,7 +154,7 @@ impl Iterator for Pixel {
 #[derive(Clone)]
 /// Row in a Layer representation.
 pub struct Row {
-    pixels: Vec<Pixel>
+    pixels: Vec<Pixel>,
 }
 impl Row {
     /// Creates a new [Row] instance.
@@ -140,7 +163,9 @@ impl Row {
     }
     /// Creates a [Row] with length.
     pub fn with_length(length: usize) -> Row {
-        Row { pixels: vec![Pixel::new(); length] }
+        Row {
+            pixels: vec![Pixel::new(); length],
+        }
     }
     /// Adds a [Pixel] to [Row].
     pub fn add_pixel(&mut self, pixel: Pixel) {
@@ -165,18 +190,17 @@ impl From<&[u8]> for Row {
 }
 impl Index<usize> for Row {
     type Output = Pixel;
-    
+
     fn index(&self, idx: usize) -> &Self::Output {
         &self.pixels[idx]
     }
 }
 impl IndexMut<usize> for Row {
     //type Output = Pixel;
-    
+
     fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
         &mut self.pixels[idx]
     }
-    
 }
 impl fmt::Debug for Row {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -199,16 +223,24 @@ impl IntoIterator for Row {
 pub struct Layer {
     width: usize,
     height: usize,
-    rows: Vec<Row>
+    rows: Vec<Row>,
 }
 impl Layer {
     /// Creates a new [Layer] instance.
     pub fn new() -> Layer {
-        Layer { width: 0, height: 0, rows: vec![] }
+        Layer {
+            width: 0,
+            height: 0,
+            rows: vec![],
+        }
     }
     /// Creates a [Layer] with dimensions.
     pub fn with_dimensions(width: usize, height: usize) -> Layer {
-        Layer { width: width, height: height, rows: vec![Row::with_length(width); height] }
+        Layer {
+            width: width,
+            height: height,
+            rows: vec![Row::with_length(width); height],
+        }
     }
     /// Adds a [Row] to [Layer].
     pub fn add_row(&mut self, row: Row) {
@@ -276,7 +308,7 @@ impl From<(usize, &[u8])> for Layer {
         layer.width = image.0;
         let mut x = 0;
         for i in image.1.chunks_exact(4 * image.0) {
-            let row = Row::from(i); 
+            let row = Row::from(i);
             layer.add_row(row);
             x += 1
         }
@@ -286,18 +318,17 @@ impl From<(usize, &[u8])> for Layer {
 }
 impl Index<usize> for Layer {
     type Output = Row;
-    
+
     fn index(&self, idx: usize) -> &Self::Output {
         &self.rows[idx]
     }
 }
 impl IndexMut<usize> for Layer {
     //type Output = Pixel;
-    
+
     fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
         &mut self.rows[idx]
     }
-    
 }
 impl fmt::Debug for Layer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -321,16 +352,16 @@ pub struct Image {
     pub width: usize,
     pub height: usize,
     pub origin: Point,
-    pub layers: Vec<Layer>
+    pub layers: Vec<Layer>,
 }
 impl Image {
     /// Creates a new [Image] instance.
     pub fn new() -> Image {
-        Image { 
+        Image {
             width: 0,
             height: 0,
-            origin: Point::from((0,0)),
-            layers: vec![]
+            origin: Point::from((0, 0)),
+            layers: vec![],
         }
     }
     /// Creates an [Image] with given dimensions.
@@ -338,34 +369,33 @@ impl Image {
         Image {
             width,
             height,
-            origin: Point::from((0,0)),
-            layers: vec![Layer::with_dimensions(width, height)]
+            origin: Point::from((0, 0)),
+            layers: vec![Layer::with_dimensions(width, height)],
         }
     }
     /// Collapses all layers to a single layer.
     pub fn collapse(&mut self) {
         if self.layers.len() == 1 {
-            return
+            return;
         }
         let mut img = Image::with_dimensions(self.width, self.height);
         for layers in 0..self.layers.len() {
-        for rows in 0..self[layers].height {
-        for pixels in 0..self[layers][rows].len() {
-            let pix = img[0][rows][pixels];
-            let pixel = self[layers][rows][pixels];
-            if pixel[3] == 0 {
-                continue
+            for rows in 0..self[layers].height {
+                for pixels in 0..self[layers][rows].len() {
+                    let pix = img[0][rows][pixels];
+                    let pixel = self[layers][rows][pixels];
+                    if pixel[3] == 0 {
+                        continue;
+                    }
+                    if pix[3] == 0 {
+                        img[0][rows][pixels] = pixel;
+                        continue;
+                    }
+                    img[0][rows][pixels] = pix + pixel;
+                }
             }
-            if pix[3] == 0 {
-                img[0][rows][pixels] = pixel;
-                continue
-            }
-            img[0][rows][pixels] = pix + pixel;
-        }
-        }
         }
         *self = img;
-        
     }
     /// Adds a [Layer] to [Image].
     pub fn add_layer(&mut self, layer: Layer) {
@@ -428,18 +458,17 @@ impl From<(usize, &[u8])> for Image {
 }
 impl Index<usize> for Image {
     type Output = Layer;
-    
+
     fn index(&self, idx: usize) -> &Self::Output {
         &self.layers[idx]
     }
 }
 impl IndexMut<usize> for Image {
     //type Output = Pixel;
-    
+
     fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
         &mut self.layers[idx]
     }
-    
 }
 impl Deref for Image {
     type Target = Vec<Layer>;
