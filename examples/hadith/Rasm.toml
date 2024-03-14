@@ -1,33 +1,38 @@
+# Rasm File
 format = "jpg"
 size = [1080, 1080]
 color = [255, 255, 255, 255]
-[[shapes]]
+[[assets]]
+id = "logo"
+src = "logo.svg"
+
+[[objects]]
 name = "image"
-path = "pic.jpg"
+src = "pic.jpg"
 origin = [0, 0]
 resize = [100, 0]
-[[shapes]]
+[[objects]]
 name = "rect"
 color = [0, 150, 75, 255]
 origin = [50.4, 0]
 offset = [57, 100]
-[[shapes]]
+[[objects]]
 name = "image"
-path = "back.png"
+src = "back.png"
 origin = [0, 0]
-[[shapes]]
+[[objects]]
 name = "image"
-path = "logo-small-s.png"
+src = "logo-small-s.png"
 origin = [0, 0]
-[[shapes]]
+[[objects]]
 name = "image"
-path = "logo-small.png"
+src = "logo-small.png"
 origin = [0, 0]
-[[shapes]]
+[[objects]]
 name = "image"
-path = "logo-medium.png"
+src = "logo-medium.png"
 origin = [0, 0]
-[[shapes]]
+[[objects]]
 name = "image"
-path = "logo-big.png"
+src = "logo-big.png"
 origin = [0, 0]

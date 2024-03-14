@@ -18,7 +18,7 @@ pub fn from_png<R: AsRef<Path>>(filename: R) -> ((usize, usize), Vec<u8>) {
     let info = decoder.get_info().unwrap();
     let width = info.width;
     let height = info.height;
-    ((width as usize, height as usize), buf)
+    ((width, height), buf)
 }
 
 pub fn from_jpg<R: AsRef<Path>>(filename: R) -> ((usize, usize), Vec<u8>) {
@@ -30,5 +30,5 @@ pub fn from_jpg<R: AsRef<Path>>(filename: R) -> ((usize, usize), Vec<u8>) {
     let info = decoder.info().unwrap();
     let width = info.width;
     let height = info.height;
-    ((width as usize, height as usize), buf)
+    ((width.into(), height.into()), buf)
 }

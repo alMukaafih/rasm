@@ -9,13 +9,21 @@ pub struct Rasm {
     pub format: String,
     pub size: [usize; 2],
     pub color: [u8; 4],
-    pub shapes: Vec<Shape>,
+    pub assets: Option<Vec<Asset>>,
+    pub objects: Vec<Object>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Shape {
+pub struct Asset {
+    pub id: String,
+    pub src: PathBuf,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Object {
     pub name: String,
-    pub path: Option<String>,
+    pub src: Option<PathBuf>,
+    pub asset: Option<String>,
     pub color: Option<[u8; 4]>,
     pub content: Option<String>,
     pub resize: Option<[f64; 2]>,
@@ -32,6 +40,6 @@ where
 
     let mut file = String::new();
     let _ = reader.read_to_string(&mut file);
-    let input: Rasm = toml::from_str(file.as_ref()).unwrap();
+    let input: Rasm = toml::from_str(&file).unwrap();
     input
 }

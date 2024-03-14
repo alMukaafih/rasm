@@ -6,6 +6,10 @@ use resize::Pixel::RGBA8;
 use resize::Type::Lanczos3;
 //use rgb::RGBA8;
 use rgb::FromSlice;
+use swash::scale::StrikeWith;
+use swash::scale::{image::Image as Img, Render, ScaleContext, Source};
+use swash::{zeno, FontRef, GlyphId};
+use zeno::{Format, Vector};
 
 use crate::image::*;
 //use crate::format::*;
@@ -22,6 +26,12 @@ pub struct Point {
     pub x: usize,
     pub y: usize,
 }
+impl Default for Point {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Point {
     pub fn new() -> Point {
         Point { x: 0, y: 0 }
@@ -102,6 +112,12 @@ pub struct Rect {
     pub width: usize,
     pub height: usize,
 }
+impl Default for Rect {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Rect {
     pub fn new() -> Rect {
         Rect {
@@ -155,17 +171,6 @@ impl Diagram for Rect {
     }
     fn resize(&mut self, _scale: [usize; 2]) {}
 }
-
-impl From<((usize, usize), (usize, usize), Vec<u8>)> for Image {
-    fn from(img: ((usize, usize), (usize, usize), Vec<u8>)) -> Self {
-        Image {
-            width: img.0 .0,
-            height: img.0 .1,
-            origin: Point::from(img.1),
-            layers: vec![Layer::from((img.0 .0, img.0 .1, img.2))],
-        }
-    }
-}
 impl Diagram for Image {
     fn draw(&mut self, canvas: &mut Canvas) {
         let layer = &mut canvas.fmt().image()[0];
@@ -185,7 +190,7 @@ impl Diagram for Image {
         let mut w2 = scale[0];
         let mut h2 = scale[1];
         if w1 == w2 && h1 == h2 {
-            return
+            return;
         }
         if scale[0] == 0 {
             w2 = (w1 as f64 * (h2 as f64 / h1 as f64)) as usize;
@@ -201,14 +206,14 @@ impl Diagram for Image {
         let src = _src.as_rgba();
         // Destination buffer. Must be mutable.
         let mut _dst = vec![0; w2 * h2 * 4];
-        let mut dst = _dst.as_rgba_mut();
+        let dst = _dst.as_rgba_mut();
         // Create reusable instance.
         let mut resizer = resize::new(w1, h1, w2, h2, RGBA8, Lanczos3).unwrap();
         // Do resize without heap allocations.
         // Might be executed multiple times for different `src` or `dst`.
-        let r = resizer.resize(&src, &mut dst);
-        println!("{:?}", r);
-        println!("{}, {} / {}, {}", w1, h1, w2, h2);
+        let _ = resizer.resize(src, dst);
+        //println!("{:?}", r);
+        //println!("{}, {} / {}, {}", w1, h1, w2, h2);
         let mut buf = Vec::new();
         for rgba in dst {
             for i in rgba.iter() {
@@ -220,9 +225,47 @@ impl Diagram for Image {
 }
 
 #[allow(dead_code)]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct TextBox {
     pub content: String,
-    pub placement: zeno::Placement,
-    pub data: Vec<u8>,
+    pub origin: (usize, usize),
+    pub offset: (usize, usize),
+    pub glyphs: Vec<Img>,
+}
+impl TextBox {
+    pub fn new(content: String, origin: (usize, usize), offset: (usize, usize)) -> TextBox {
+        TextBox {
+            content,
+            origin,
+            offset,
+            glyphs: vec![],
+        }
+    }
+    pub fn render_glyph(
+        context: &mut ScaleContext,
+        font: &FontRef,
+        size: f32,
+        hint: bool,
+        glyph_id: GlyphId,
+        x: f32,
+        y: f32,
+    ) -> Option<Img> {
+        // Build the scaler
+        let mut scaler = context.builder(*font).size(size).hint(hint).build();
+        // Compute the fractional offset-- you'll likely want to quantize this
+        // in a real renderer
+        let offset = Vector::new(x.fract(), y.fract());
+        // Select our source order
+        Render::new(&[
+            Source::ColorOutline(0),
+            Source::ColorBitmap(StrikeWith::BestFit),
+            Source::Outline,
+        ])
+        // Select a subpixel format
+        .format(Format::Subpixel)
+        // Apply the fractional offset
+        .offset(offset)
+        // Render the image
+        .render(&mut scaler, glyph_id)
+    }
 }

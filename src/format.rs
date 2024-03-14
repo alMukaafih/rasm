@@ -21,7 +21,7 @@ pub struct Png {
     bit_depth: png::BitDepth,
 }
 impl Png {
-    pub fn new(width: usize, height: usize) -> Png {
+    pub fn new(width: usize, height: usize,) -> Png {
         Png {
             image: Image::with_dimensions(width, height),
             color_type: png::ColorType::Rgba,
@@ -40,7 +40,7 @@ impl Format for Png {
         let pth = format!("{filename}.png");
         let path = Path::new(&pth);
         let file = File::create(path).unwrap();
-        let ref mut w = BufWriter::new(file);
+        let w = &mut BufWriter::new(file);
         let mut encoder = png::Encoder::new(
             w,
             self.image.width().try_into().unwrap(),
@@ -52,7 +52,7 @@ impl Format for Png {
         writer
             .write_image_data(self.image.to_vec().as_slice())
             .unwrap();
-        println!("{:?}", self.image[0][546][0]);
+        //println!("{:?}", self.image[0][546][0]);
     }
     fn image(&mut self) -> &mut Image {
         &mut self.image
@@ -80,7 +80,7 @@ impl Jpg {
 impl Format for Jpg {
     fn write(&mut self, filename: &str) {
         let pth = format!("{filename}.jpg");
-       // Create new encoder that writes to a file with maximum quality (100)
+        // Create new encoder that writes to a file with maximum quality (100)
         let encoder = jpg::Encoder::new_file(pth, 100).unwrap();
 
         // Encode the data with dimension 2x2
@@ -88,10 +88,18 @@ impl Format for Jpg {
             self.image.to_vec().as_slice(),
             self.image.width.try_into().unwrap(),
             self.image.height.try_into().unwrap(),
-            self.color_type
+            self.color_type,
         );
     }
     fn image(&mut self) -> &mut Image {
         &mut self.image
     }
+}
+
+
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+/// Svg Format.
+pub struct Svg {
+    image: Image,
 }

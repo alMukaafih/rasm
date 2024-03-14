@@ -5,7 +5,7 @@ use std::ops::{Add, AddAssign};
 use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
 
-use crate::shape::*;
+use crate::object::*;
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -17,6 +17,12 @@ pub struct Pixel {
     alpha: u8,
     count: usize,
 }
+impl Default for Pixel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Pixel {
     /// Creates a new [Pixel] instance.
     pub fn new() -> Pixel {
@@ -156,6 +162,12 @@ impl Iterator for Pixel {
 pub struct Row {
     pixels: Vec<Pixel>,
 }
+impl Default for Row {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Row {
     /// Creates a new [Row] instance.
     pub fn new() -> Row {
@@ -225,6 +237,12 @@ pub struct Layer {
     height: usize,
     rows: Vec<Row>,
 }
+impl Default for Layer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Layer {
     /// Creates a new [Layer] instance.
     pub fn new() -> Layer {
@@ -237,8 +255,8 @@ impl Layer {
     /// Creates a [Layer] with dimensions.
     pub fn with_dimensions(width: usize, height: usize) -> Layer {
         Layer {
-            width: width,
-            height: height,
+            width,
+            height,
             rows: vec![Row::with_length(width); height],
         }
     }
@@ -354,6 +372,12 @@ pub struct Image {
     pub origin: Point,
     pub layers: Vec<Layer>,
 }
+impl Default for Image {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Image {
     /// Creates a new [Image] instance.
     pub fn new() -> Image {
@@ -440,6 +464,16 @@ impl Image {
             }
         }
         bytes
+    }
+}
+impl From<((usize, usize), (usize, usize), Vec<u8>)> for Image {
+    fn from(img: ((usize, usize), (usize, usize), Vec<u8>)) -> Self {
+        Image {
+            width: img.0 .0,
+            height: img.0 .1,
+            origin: Point::from(img.1),
+            layers: vec![Layer::from((img.0 .0, img.0 .1, img.2))],
+        }
     }
 }
 impl From<(usize, usize, &[u8])> for Image {

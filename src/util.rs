@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 //use crate::image::*;
 use crate::format::*;
 use crate::image::*;
-use crate::shape::*;
+use crate::object::*;
 
 #[allow(dead_code)]
 //#[derive(Clone, Debug)]
@@ -27,8 +27,8 @@ impl Canvas {
             panic!("unknown image format")
         }
         Canvas {
-            width: width,
-            height: height,
+            width,
+            height,
             format: img,
             shapes: VecDeque::new(),
         }
@@ -58,13 +58,11 @@ impl Canvas {
         origin: (f64, f64),
         img: Vec<u8>,
     ) -> &mut Box<dyn Diagram> {
-        let width = dimensions.0;
-        let height = dimensions.1;
-        let ox = (width as f64 * (origin.0 / 100.0)) as usize;
-        let oy = (height as f64 * (origin.1 / 100.0)) as usize;
+        let ox = (self.width as f64 * (origin.0 / 100.0)) as usize;
+        let oy = (self.height as f64 * (origin.1 / 100.0)) as usize;
 
-        let photo = Image::from((dimensions, (ox, oy), img));
-        self.shapes.push_back(Box::new(photo));
+        let image = Image::from((dimensions, (ox, oy), img));
+        self.shapes.push_back(Box::new(image));
         let idx = self.shapes.len();
         &mut self.shapes[idx - 1]
     }

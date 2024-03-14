@@ -94,6 +94,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "file-format"
+version = "0.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ba1b81b3c213cf1c071f8bf3b83531f310df99642e58c48247272eef006cae5"
+
+[[package]]
 name = "flate2"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -264,6 +270,7 @@ dependencies = [
 name = "rasm"
 version = "0.1.0"
 dependencies = [
+ "file-format",
  "image",
  "imghdr",
  "jpeg-encoder",
@@ -272,9 +279,9 @@ dependencies = [
  "resize",
  "rgb",
  "serde",
+ "svg",
  "swash",
  "toml",
- "zeno 0.3.1",
  "zune-core",
  "zune-jpeg",
  "zune-png",
@@ -364,6 +371,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
 
 [[package]]
+name = "svg"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "583e1c5c326fd6fede8797006de3b95ad6bcd60a592952952c5ba7ddd7e84c83"
+
+[[package]]
 name = "swash"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -371,7 +384,7 @@ checksum = "d06ff4664af8923625604261c645f5c4cc610cc83c84bec74b50d76237089de7"
 dependencies = [
  "read-fonts",
  "yazi",
- "zeno 0.2.3",
+ "zeno",
 ]
 
 [[package]]
@@ -451,12 +464,6 @@ name = "zeno"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd15f8e0dbb966fd9245e7498c7e9e5055d9e5c8b676b95bd67091cd11a1e697"
-
-[[package]]
-name = "zeno"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea3a5f6377b61784d9fe23ecfea15202508978bce00b401fcd8efeb8d21c767b"
 
 [[package]]
 name = "zune-core"
