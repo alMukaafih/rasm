@@ -21,13 +21,10 @@ pub mod asset;
 #[cfg(test)]
 pub mod tests;
 
-use crate::file::*;
 use crate::image::*;
 use crate::object::*;
 use crate::parse::*;
 use crate::util::*;
-
-use file_format::{FileFormat, Kind};
 
 use std::borrow::Cow::Borrowed;
 use std::env;

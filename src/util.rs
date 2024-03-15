@@ -1,10 +1,14 @@
 //! This module defines useful utilities used by the generator.
 use std::collections::VecDeque;
+use file_format::{FileFormat, Kind};
+use std::path::PathBuf;
 
 //use crate::image::*;
+use crate::file::*;
 use crate::format::*;
 use crate::image::*;
 use crate::object::*;
+use crate::parse::*;
 
 #[allow(dead_code)]
 //#[derive(Clone, Debug)]
@@ -90,7 +94,7 @@ impl Canvas {
 }
 
 /// Parses assets in the Manifest. 
-fn parse_assets(assets_info: Vec<AssetInfo>) {
+pub fn parse_assets(assets_info: Vec<AssetInfo>) {
     for asset_info in assets_info {
         
     }
@@ -99,7 +103,7 @@ fn parse_assets(assets_info: Vec<AssetInfo>) {
 /// Parses a [Rectangle][R].
 ///
 /// [R]: Rect
-fn parse_rect(canvas: &mut Canvas, object_info: ObjectInfo) {
+pub fn parse_rect(canvas: &mut Canvas, object_info: ObjectInfo) {
     canvas.new_rect(
         object_info.origin.unwrap(),
         object_info.offset.unwrap(),
@@ -108,7 +112,7 @@ fn parse_rect(canvas: &mut Canvas, object_info: ObjectInfo) {
 }
 
 /// Parses an [Image].
-fn parse_image(canvas: &mut Canvas, object_info: ObjectInfo, mut file: PathBuf) {
+pub fn parse_image(canvas: &mut Canvas, object_info: ObjectInfo, mut file: PathBuf) {
     let width = canvas.width;
     let height = canvas.height;
     file.pop();
