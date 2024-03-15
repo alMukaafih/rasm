@@ -1,3 +1,4 @@
+//! This module defines struct for working with Image data.
 use std::convert::From;
 use std::fmt;
 use std::iter::{IntoIterator, Iterator};
@@ -17,12 +18,6 @@ pub struct Pixel {
     alpha: u8,
     count: usize,
 }
-impl Default for Pixel {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Pixel {
     /// Creates a new [Pixel] instance.
     pub fn new() -> Pixel {
@@ -53,6 +48,11 @@ impl Pixel {
     pub fn set_alpha(&mut self, alpha: u8) -> &mut Pixel {
         self.alpha = alpha;
         self
+    }
+}
+impl Default for Pixel {
+    fn default() -> Self {
+        Self::new()
     }
 }
 impl From<&[u8]> for Pixel {
@@ -162,12 +162,6 @@ impl Iterator for Pixel {
 pub struct Row {
     pixels: Vec<Pixel>,
 }
-impl Default for Row {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Row {
     /// Creates a new [Row] instance.
     pub fn new() -> Row {
@@ -179,7 +173,7 @@ impl Row {
             pixels: vec![Pixel::new(); length],
         }
     }
-    /// Adds a [Pixel] to [Row].
+    /// Adds a [Pixel] to Row.
     pub fn add_pixel(&mut self, pixel: Pixel) {
         self.pixels.push(pixel)
     }
@@ -187,8 +181,10 @@ impl Row {
     pub fn get_pixel(&mut self, index: usize) -> &mut Pixel {
         &mut self.pixels[index - 1]
     }
-    pub fn len(&self) -> usize {
-        self.pixels.len()
+}
+impl Default for Row {
+    fn default() -> Self {
+        Self::new()
     }
 }
 impl From<&[u8]> for Row {
@@ -214,6 +210,13 @@ impl IndexMut<usize> for Row {
         &mut self.pixels[idx]
     }
 }
+impl Deref for Row {
+    type Target = Vec<Pixel>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pixels
+    }
+}
 impl fmt::Debug for Row {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let _ = f.write_str("Row ");
@@ -237,12 +240,6 @@ pub struct Layer {
     height: usize,
     rows: Vec<Row>,
 }
-impl Default for Layer {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Layer {
     /// Creates a new [Layer] instance.
     pub fn new() -> Layer {
@@ -260,24 +257,27 @@ impl Layer {
             rows: vec![Row::with_length(width); height],
         }
     }
-    /// Adds a [Row] to [Layer].
+    /// Adds a [Row] to Layer.
     pub fn add_row(&mut self, row: Row) {
         self.rows.push(row)
     }
-    /// Retrives a [Row] from [Layer].
+    /// Retrives a [Row] from Layer.
     pub fn get_row(&mut self, index: usize) -> &mut Row {
         &mut self.rows[index - 1]
     }
+    /// Mutates a Row.
     pub fn mut_row(&mut self, idx: usize, color: Pixel) {
         for i in 0..self.width {
             self[idx][i] = color;
         }
     }
+    /// Mutates a Column.
     pub fn mut_col(&mut self, idx: usize, color: Pixel) {
         for i in 0..self.height {
             self[i][idx] = color;
         }
     }
+    /// Fills the Image with given Color.
     pub fn fill(&mut self, color: Pixel) {
         for rows in 0..self.height {
             for pixels in 0..self.width {
@@ -285,15 +285,25 @@ impl Layer {
             }
         }
     }
+    /// Constructs a [Rectangle][R]
+    ///
+    /// [R]: Rect
     pub fn construct(_rect: Rect, width: usize, _height: usize) -> Layer {
         let bytes: &[u8] = &[0];
         Layer::from((width, bytes))
     }
+    /// Retrieves the width of Layer.
     pub fn width(&self) -> usize {
         self.width
     }
+    /// Retrieves the height of Layer.
     pub fn height(&self) -> usize {
         self.height
+    }
+}
+impl Default for Layer {
+    fn default() -> Self {
+        Self::new()
     }
 }
 impl From<(usize, usize, Vec<u8>)> for Layer {
@@ -348,6 +358,13 @@ impl IndexMut<usize> for Layer {
         &mut self.rows[idx]
     }
 }
+impl Deref for Layer {
+    type Target = Vec<Row>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.rows
+    }
+}
 impl fmt::Debug for Layer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let _ = f.write_str("Layer ");
@@ -367,17 +384,15 @@ impl IntoIterator for Layer {
 #[derive(Clone)]
 /// Image representation.
 pub struct Image {
+    /// Width of Image.
     pub width: usize,
+    /// Height of Image.
     pub height: usize,
+    /// Origin of Image.
     pub origin: Point,
+    /// Layers in Image.
     pub layers: Vec<Layer>,
 }
-impl Default for Image {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Image {
     /// Creates a new [Image] instance.
     pub fn new() -> Image {
@@ -421,23 +436,23 @@ impl Image {
         }
         *self = img;
     }
-    /// Adds a [Layer] to [Image].
+    /// Adds a [Layer] to Image.
     pub fn add_layer(&mut self, layer: Layer) {
         self.layers.push(layer);
     }
-    /// Retrieves a [Layer] from [Image].
+    /// Retrieves a [Layer] from Image.
     pub fn get_layer(&mut self, index: usize) -> &mut Layer {
         &mut self.layers[index - 1]
     }
+    /// Retrieves the width of the Image.
     pub fn width(&self) -> usize {
         self.width
     }
+    /// Retrieves the height of the Image.
     pub fn height(&self) -> usize {
         self.height
     }
-    pub fn len(&self) -> usize {
-        self.layers.len()
-    }
+    /// Converts the Image to a [`Vec<u8>`].
     pub fn to_vec(&mut self) -> Vec<u8> {
         if self.layers.len() > 1 {
             self.collapse();
@@ -453,6 +468,7 @@ impl Image {
         }
         bytes
     }
+    /// Converts the Image to a [`Vec<Pixel>`].
     pub fn as_pixels(&mut self) -> Vec<Pixel> {
         if self.layers.len() > 1 {
             self.collapse();
@@ -464,6 +480,11 @@ impl Image {
             }
         }
         bytes
+    }
+}
+impl Default for Image {
+    fn default() -> Self {
+        Self::new()
     }
 }
 impl From<((usize, usize), (usize, usize), Vec<u8>)> for Image {

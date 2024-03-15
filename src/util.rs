@@ -1,3 +1,4 @@
+//! This module defines useful utilities used by the generator.
 use std::collections::VecDeque;
 
 //use crate::image::*;
@@ -7,13 +8,17 @@ use crate::object::*;
 
 #[allow(dead_code)]
 //#[derive(Clone, Debug)]
+/// Canvas for drawing Objects.
 pub struct Canvas {
+    /// Width of Canvas.
     pub width: usize,
+    /// Height of Canvas.
     pub height: usize,
     format: Box<dyn Format>,
-    shapes: VecDeque<Box<dyn Diagram>>,
+    shapes: VecDeque<Box<dyn Object>>,
 }
 impl Canvas {
+    /// Creates a new Canvas.
     pub fn new<T>(fmt: T, width: usize, height: usize) -> Canvas
     where
         T: AsRef<str>,
@@ -33,12 +38,15 @@ impl Canvas {
             shapes: VecDeque::new(),
         }
     }
+    /// Creates a new [Rectangle][R] in Canvas.
+    ///
+    /// [R]: Rect
     pub fn new_rect(
         &mut self,
         a: (f64, f64),
         c: (f64, f64),
         color: [u8; 4],
-    ) -> &mut Box<dyn Diagram> {
+    ) -> &mut Box<dyn Object> {
         let ax = (self.width as f64 * (a.0 / 100.0)) as usize;
         let ay = (self.height as f64 * (a.1 / 100.0)) as usize;
 
@@ -52,12 +60,13 @@ impl Canvas {
         let idx = self.shapes.len();
         &mut self.shapes[idx - 1]
     }
+    /// Adds an [Image] to the Canvas.
     pub fn add_image(
         &mut self,
         dimensions: (usize, usize),
         origin: (f64, f64),
         img: Vec<u8>,
-    ) -> &mut Box<dyn Diagram> {
+    ) -> &mut Box<dyn Object> {
         let ox = (self.width as f64 * (origin.0 / 100.0)) as usize;
         let oy = (self.height as f64 * (origin.1 / 100.0)) as usize;
 
@@ -66,14 +75,58 @@ impl Canvas {
         let idx = self.shapes.len();
         &mut self.shapes[idx - 1]
     }
+    /// Retrieve the Output format for Canvas.
     pub fn fmt(&mut self) -> &mut Box<dyn Format> {
         &mut self.format
     }
+    /// Saves the Canvas as format file in disk.
     pub fn save(&mut self, filename: &str) {
         for _i in 0..self.shapes.len() {
             let mut obj = self.shapes.pop_front().unwrap();
             obj.draw(self)
         }
         self.format.write(filename)
+    }
+}
+
+/// Parses assets in the Manifest. 
+fn parse_assets(assets_info: Vec<AssetInfo>) {
+    for asset_info in assets_info {
+        
+    }
+}
+
+/// Parses a [Rectangle][R].
+///
+/// [R]: Rect
+fn parse_rect(canvas: &mut Canvas, object_info: ObjectInfo) {
+    canvas.new_rect(
+        object_info.origin.unwrap(),
+        object_info.offset.unwrap(),
+        object_info.color.unwrap(),
+    );
+}
+
+/// Parses an [Image].
+fn parse_image(canvas: &mut Canvas, object_info: ObjectInfo, mut file: PathBuf) {
+    let width = canvas.width;
+    let height = canvas.height;
+    file.pop();
+    file.push(object_info.src.unwrap());
+    let path = file.to_str().unwrap();
+    let fmt = FileFormat::from_file(path).unwrap();
+    let file_data = match fmt.media_type() {
+        "image/png" => from_png(file),
+        "image/jpeg" => from_jpg(file),
+        &_ => panic!("unknown format"),
+    };
+
+    let image = canvas.add_image(file_data.0, object_info.origin.unwrap(), file_data.1);
+    if object_info.resize.is_some() {
+        let scale = object_info.resize.unwrap();
+        let w2 = (width as f64 * (scale[0] / 100.0)) as usize;
+        let h2 = (height as f64 * (scale[1] / 100.0)) as usize;
+        image.resize([w2, h2]);
+        //println!("{}, {}", w2, h2);
     }
 }

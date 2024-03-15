@@ -1,3 +1,4 @@
+//! This module defines target Formats for the generator.
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
@@ -8,7 +9,9 @@ use crate::image::*;
 
 /// Image Format.
 pub trait Format {
+    /// Writes the Image to disk.
     fn write(&mut self, filename: &str);
+    /// Retrieves the [Image] data of the format.
     fn image(&mut self) -> &mut Image;
 }
 
@@ -21,6 +24,7 @@ pub struct Png {
     bit_depth: png::BitDepth,
 }
 impl Png {
+    /// Creates a new Png Image.
     pub fn new(width: usize, height: usize,) -> Png {
         Png {
             image: Image::with_dimensions(width, height),
@@ -28,9 +32,11 @@ impl Png {
             bit_depth: png::BitDepth::Eight,
         }
     }
+    /// Sets the Color Type of the Image.
     pub fn set_color_type(&mut self, color_type: png::ColorType) {
         self.color_type = color_type
     }
+    /// Sets the Bit Depth of the Image.
     pub fn set_bit_depth(&mut self, bit_depth: png::BitDepth) {
         self.bit_depth = bit_depth
     }
@@ -67,12 +73,14 @@ pub struct Jpg {
     color_type: jpg::ColorType,
 }
 impl Jpg {
+    /// Creates a new Jpg Image.
     pub fn new(width: usize, height: usize) -> Jpg {
         Jpg {
             image: Image::with_dimensions(width, height),
             color_type: jpg::ColorType::Rgba,
         }
     }
+    /// Sets the Color Type of Image.
     pub fn set_color_type(&mut self, color_type: jpg::ColorType) {
         self.color_type = color_type
     }
@@ -94,12 +102,4 @@ impl Format for Jpg {
     fn image(&mut self) -> &mut Image {
         &mut self.image
     }
-}
-
-
-#[allow(dead_code)]
-#[derive(Clone, Debug)]
-/// Svg Format.
-pub struct Svg {
-    image: Image,
 }

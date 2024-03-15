@@ -1,3 +1,4 @@
+//! This module defines objects for the generator.
 use std::ops::{Add, AddAssign};
 use std::ops::{Index, IndexMut};
 use std::ops::{Sub, SubAssign};
@@ -15,15 +16,21 @@ use crate::image::*;
 //use crate::format::*;
 use crate::util::*;
 
-pub trait Diagram {
+/// The definition of an Object.
+pub trait Object {
+    /// Draws the Object on the [Canvas].
     fn draw(&mut self, canvas: &mut Canvas);
+    /// Resizes the [Object] using scale.
     fn resize(&mut self, scale: [usize; 2]);
 }
 
 #[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
+/// A Point on a Cartesian plane.
 pub struct Point {
+    /// x coordinate.
     pub x: usize,
+    /// y coordinate.
     pub y: usize,
 }
 impl Default for Point {
@@ -33,6 +40,7 @@ impl Default for Point {
 }
 
 impl Point {
+    /// Creates a new Point.
     pub fn new() -> Point {
         Point { x: 0, y: 0 }
     }
@@ -106,10 +114,15 @@ impl SubAssign for Point {
 
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
+/// A Rectangle on a Cartesian Plane.
 pub struct Rect {
+    /// Origin of Rectangle.
     pub origin: Point,
+    /// Color of Rectangle.
     pub color: Pixel,
+    /// Width of Rectangle.
     pub width: usize,
+    /// Height of Rectangle.
     pub height: usize,
 }
 impl Default for Rect {
@@ -119,6 +132,7 @@ impl Default for Rect {
 }
 
 impl Rect {
+    /// Creates a new Rectangle.
     pub fn new() -> Rect {
         Rect {
             origin: Point::new(),
@@ -127,6 +141,7 @@ impl Rect {
             height: 0,
         }
     }
+    /// Creates Rectangle using coordinates.
     pub fn with_coordinates(a: (usize, usize), c: (usize, usize)) -> Rect {
         let pixel: &[u8] = &[0, 0, 0, 255];
         Rect {
@@ -136,9 +151,11 @@ impl Rect {
             height: c.0 - a.0,
         }
     }
+    /// Sets color of Rectangle.
     pub fn set_color(&mut self, pixel: Pixel) {
         self.color = pixel
     }
+    /// Paste Rectangle on [Image]
     pub fn paste(&self, img: &mut Image) {
         let mut layer = Layer::with_dimensions(img.width(), img.height());
         for rows in 0..self.height {
@@ -160,7 +177,7 @@ impl From<(usize, usize, usize, usize, u8, u8, u8, u8)> for Rect {
         }
     }
 }
-impl Diagram for Rect {
+impl Object for Rect {
     fn draw(&mut self, canvas: &mut Canvas) {
         let layer = &mut canvas.fmt().image()[0];
         for rows in 0..self.height {
@@ -171,7 +188,7 @@ impl Diagram for Rect {
     }
     fn resize(&mut self, _scale: [usize; 2]) {}
 }
-impl Diagram for Image {
+impl Object for Image {
     fn draw(&mut self, canvas: &mut Canvas) {
         let layer = &mut canvas.fmt().image()[0];
         let lay = &self.layers[0];
@@ -226,13 +243,19 @@ impl Diagram for Image {
 
 #[allow(dead_code)]
 #[derive(Clone)]
+/// A Text Box.
 pub struct TextBox {
+    /// Text content.
     pub content: String,
+    /// Point of origin.
     pub origin: (usize, usize),
+    /// 
     pub offset: (usize, usize),
+    /// Image representation of Text box characters
     pub glyphs: Vec<Img>,
 }
 impl TextBox {
+    /// Creates a new Text box.
     pub fn new(content: String, origin: (usize, usize), offset: (usize, usize)) -> TextBox {
         TextBox {
             content,
@@ -241,6 +264,7 @@ impl TextBox {
             glyphs: vec![],
         }
     }
+    /// Render a Glyph character.
     pub fn render_glyph(
         context: &mut ScaleContext,
         font: &FontRef,
