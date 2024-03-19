@@ -5,6 +5,14 @@ use std::iter::{IntoIterator, Iterator};
 use std::ops::{Add, AddAssign};
 use std::ops::{Deref, DerefMut};
 use std::ops::{Index, IndexMut};
+use std::fs::read;
+use std::path::*;
+
+use file_format::FileFormat;
+use zune_core::colorspace::ColorSpace;
+use zune_core::options::DecoderOptions;
+use zune_jpeg::JpegDecoder;
+use zune_png::PngDecoder;
 
 use crate::object::*;
 
@@ -177,7 +185,7 @@ impl Row {
     pub fn add_pixel(&mut self, pixel: Pixel) {
         self.pixels.push(pixel)
     }
-    /// Retrieves a [Pixel] from [Row].
+    /// Returns a [Pixel] from [Row] at given index.
     pub fn get_pixel(&mut self, index: usize) -> &mut Pixel {
         &mut self.pixels[index - 1]
     }
@@ -261,7 +269,7 @@ impl Layer {
     pub fn add_row(&mut self, row: Row) {
         self.rows.push(row)
     }
-    /// Retrives a [Row] from Layer.
+    /// Returns a [Row] from Layer at given index.
     pub fn get_row(&mut self, index: usize) -> &mut Row {
         &mut self.rows[index - 1]
     }
@@ -292,11 +300,11 @@ impl Layer {
         let bytes: &[u8] = &[0];
         Layer::from((width, bytes))
     }
-    /// Retrieves the width of Layer.
+    /// Returns the width of Layer.
     pub fn width(&self) -> usize {
         self.width
     }
-    /// Retrieves the height of Layer.
+    /// Returns the height of Layer.
     pub fn height(&self) -> usize {
         self.height
     }
@@ -440,15 +448,15 @@ impl Image {
     pub fn add_layer(&mut self, layer: Layer) {
         self.layers.push(layer);
     }
-    /// Retrieves a [Layer] from Image.
+    /// Returns a [Layer] from Image at given index.
     pub fn get_layer(&mut self, index: usize) -> &mut Layer {
         &mut self.layers[index - 1]
     }
-    /// Retrieves the width of the Image.
+    /// Returns the width of the Image.
     pub fn width(&self) -> usize {
         self.width
     }
-    /// Retrieves the height of the Image.
+    /// Returns the height of the Image.
     pub fn height(&self) -> usize {
         self.height
     }
@@ -480,6 +488,38 @@ impl Image {
             }
         }
         bytes
+    }
+    /// Creates an Image from file on disk.
+    pub fn from_file<R: AsRef<Path>>(filename: R) -> Image {
+        let fmt = FileFormat::from_file(&filename).unwrap();
+
+        if fmt.media_type() == "image/png" {
+            let file_contents = read(filename).unwrap();
+            let options = DecoderOptions::default()
+                .png_set_add_alpha_channel(true)
+                .png_set_strip_to_8bit(true);
+            // use the above option to decode
+            let mut decoder = PngDecoder::new_with_options(&file_contents, options);
+        
+            let buf = decoder.decode_raw().unwrap();
+            let info = decoder.get_info().unwrap();
+            let width = info.width as usize;
+            let height = info.height as usize;
+            return Image::from(((width, height), (0,0), buf))
+        } 
+        else if fmt.media_type() == "image/jpeg" {
+            let file_contents = read(filename).unwrap();
+            let options = DecoderOptions::default().jpeg_set_out_colorspace(ColorSpace::RGBA);
+        
+            let mut decoder = JpegDecoder::new_with_options(&file_contents, options);
+            let buf = decoder.decode().unwrap();
+            let info = decoder.info().unwrap();
+            let width = info.width as usize;
+            let height = info.height as usize;
+            return Image::from(((width, height), (0,0), buf))
+        } else {
+            panic!("I know it's an Image file, but I don't know what to do with it.")
+        }
     }
 }
 impl Default for Image {

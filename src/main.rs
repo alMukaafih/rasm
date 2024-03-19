@@ -5,24 +5,21 @@
 //!
 //! ```bash
 //! rasm hadith.rasm.toml
+//!
 //! rasm hadith/
 //! ```
-//! 
+//!
 
-
-pub mod file;
+pub mod asset;
 pub mod format;
 pub mod image;
-pub mod parse;
 pub mod object;
+pub mod parse;
 pub mod util;
-pub mod asset;
 //pub mod palette;
 #[cfg(test)]
 pub mod tests;
 
-use crate::image::*;
-use crate::object::*;
 use crate::parse::*;
 use crate::util::*;
 

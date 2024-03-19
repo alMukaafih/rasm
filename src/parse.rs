@@ -5,6 +5,7 @@ use std::io::BufReader;
 use std::io::Read;
 use std::path::*;
 
+#[allow(unused_imports)]
 use crate::object::*;
 
 #[derive(Debug, Deserialize)]

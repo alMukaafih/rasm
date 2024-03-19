@@ -1,10 +1,4 @@
-use std::fs::read;
-use std::path::*;
 
-use zune_core::colorspace::ColorSpace;
-use zune_core::options::DecoderOptions;
-use zune_jpeg::JpegDecoder;
-use zune_png::PngDecoder;
 
 pub fn from_png<R: AsRef<Path>>(filename: R) -> ((usize, usize), Vec<u8>) {
     let file_contents = read(filename).unwrap();

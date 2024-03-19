@@ -4,7 +4,6 @@ use file_format::{FileFormat, Kind};
 use std::path::PathBuf;
 
 //use crate::image::*;
-use crate::file::*;
 use crate::format::*;
 use crate::image::*;
 use crate::object::*;
@@ -67,14 +66,12 @@ impl Canvas {
     /// Adds an [Image] to the Canvas.
     pub fn add_image(
         &mut self,
-        dimensions: (usize, usize),
         origin: (f64, f64),
-        img: Vec<u8>,
+        mut image: Image,
     ) -> &mut Box<dyn Object> {
         let ox = (self.width as f64 * (origin.0 / 100.0)) as usize;
         let oy = (self.height as f64 * (origin.1 / 100.0)) as usize;
-
-        let image = Image::from((dimensions, (ox, oy), img));
+        image.origin = Point::from((ox, oy));
         self.shapes.push_back(Box::new(image));
         let idx = self.shapes.len();
         &mut self.shapes[idx - 1]
@@ -92,7 +89,7 @@ impl Canvas {
         self.format.write(filename)
     }
 }
-
+#[allow(unused_variables)]
 /// Parses assets in the Manifest. 
 pub fn parse_assets(assets_info: Vec<AssetInfo>) {
     for asset_info in assets_info {
@@ -117,15 +114,14 @@ pub fn parse_image(canvas: &mut Canvas, object_info: ObjectInfo, mut file: PathB
     let height = canvas.height;
     file.pop();
     file.push(object_info.src.unwrap());
-    let path = file.to_str().unwrap();
-    let fmt = FileFormat::from_file(path).unwrap();
-    let file_data = match fmt.media_type() {
-        "image/png" => from_png(file),
-        "image/jpeg" => from_jpg(file),
-        &_ => panic!("unknown format"),
+    //let path = file.to_str().unwrap();
+    let fmt = FileFormat::from_file(&file).unwrap();
+    let img = match fmt.kind() {
+        Kind::Image => Image::from_file(file),
+        _ => panic!("{} is not an Image file", file.to_str().unwrap()),
     };
 
-    let image = canvas.add_image(file_data.0, object_info.origin.unwrap(), file_data.1);
+    let image = canvas.add_image(object_info.origin.unwrap(), img);
     if object_info.resize.is_some() {
         let scale = object_info.resize.unwrap();
         let w2 = (width as f64 * (scale[0] / 100.0)) as usize;
