@@ -89,6 +89,7 @@ impl Canvas {
         self.format.write(filename)
     }
 }
+
 #[allow(unused_variables)]
 /// Parses assets in the Manifest. 
 pub fn parse_assets(assets_info: Vec<AssetInfo>) {

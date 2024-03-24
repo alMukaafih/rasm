@@ -8,7 +8,7 @@ use svg::parser::Event;
 use swash::zeno::{Mask, PathData};
 
 //use crate::object::*;
-//use crate::util::*;
+use crate::image::*;
 
 /// An Asset.
 pub trait Asset {
@@ -39,8 +39,9 @@ pub struct Svg {
     data: String,
 }
 #[allow(non_upper_case_globals)]
-impl Asset for Svg {
-    fn load(src: PathBuf) -> Self {
+impl Svg {
+    /// Loads Svg from file.
+    pub fn load(src: PathBuf) -> Self {
         let mut content = String::new();
         let mut data = String::new();
         for event in svg::open(&src, &mut content).unwrap() {
@@ -58,7 +59,8 @@ impl Asset for Svg {
             id, src, data
         }
     }
-    fn render(&self, scale: [usize; 2], text: Option<String>) -> Vec<u8> {
+    /// Renders Svg as bytes.
+    pub fn render(&self, _scale: [usize; 2], _text: Option<String>) -> Vec<u8> {
         vec![]
     }
 }
@@ -69,85 +71,107 @@ impl Asset for Svg {
 pub struct Font {
     id: String,
     src: PathBuf,
-    content: String,
-}
-
-#[allow(dead_code)]
-enum Item {
-    Font,
-    Raster,
-    Vector,
 }
 
 #[allow(dead_code)]
 /// Assets Map;
 pub struct Assets {
-    assets: HashMap<String, Item>,
-    fonts: HashMap<String, Box<dyn Asset>>,
-    rasters: HashMap<String, Box<dyn Asset>>,
-    vectors: HashMap<String, Box<dyn Asset>>,
+    assets: Vec<String>,
+    fonts: HashMap<String, Font>,
+    images: HashMap<String, Image>,
+    svgs: HashMap<String, Svg>,
 }
 impl Assets {
-    /// Returns a reference to the value corresponding to the key.
-    pub fn get(&self, k: &str) -> Option<&Box<dyn Asset>> {
-        let v = self.assets.get(k);
-        match v {
-            Some(Item::Font) => return self.fonts.get(k),
-            Some(Item::Raster) => return self.rasters.get(k),
-            Some(Item::Vector) => return self.vectors.get(k),
-            None => None,
-        }
-    }
-    /// Returns a mutable reference to the value corresponding to the key.
-    pub fn get_mut(&mut self, k: &str) -> Option<&mut Box<dyn Asset>> {
-        let v = self.assets.get_mut(k);
-        match v {
-            Some(Item::Font) => return self.fonts.get_mut(k),
-            Some(Item::Raster) => return self.rasters.get_mut(k),
-            Some(Item::Vector) => return self.vectors.get_mut(k),
-            None => None,
-        }
+    /// Returns true if the map contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.assets.is_empty()
     }
     /// Returns the number of elements in the map.
     pub fn len(&self) -> usize {
         self.assets.len()
     }
-    /// Returns true if the map contains no elements.
-    pub fn is_empty(&self) -> bool {
-        self.assets.is_empty()
-    }
-    /// Inserts a key-value pair into the map.
-    ///
-    /// If the map did not have this key present, None is returned.
-    ///
-    /// If the map did have this key present, the value is updated, and the old value is returned.
-    pub fn insert(&mut self, k: &str, v: Box<dyn Asset>) -> Option<Box<dyn Asset>> {
-        if v.is_font() {
-            self.assets.insert(k.to_string(), Item::Font);
-            self.fonts.insert(k.to_string(), v)
-        } else if v.is_raster() {
-            self.assets.insert(k.to_string(), Item::Raster);
-            self.rasters.insert(k.to_string(), v)
-        } else if v.is_vector() {
-            self.assets.insert(k.to_string(), Item::Vector);
-            self.vectors.insert(k.to_string(), v)
-        } else {
-            None
-        }
-    }
-    /// Creates an empty Assets.
+    /// Creates an empty Assets Map.
     ///
     /// The assets map is initially created with a capacity of 0, so it will not allocate until it is first inserted into.
     pub fn new() -> Assets {
         Assets {
-            assets: HashMap::new(),
+            assets: Vec::new(),
             fonts: HashMap::new(),
-            rasters: HashMap::new(),
-            vectors: HashMap::new(),
+            images: HashMap::new(),
+            svgs: HashMap::new(),
         }
     }
+    /// Creates an empty HashMap with at least the specified capacity.
+    ///
+    /// The hash map will be able to hold at least capacity elements without reallocating. This method is allowed to allocate for more elements than capacity. If capacity is 0, the hash map will not allocate.
+    pub fn with_capacity(capacity: usize) -> Assets {
+        Assets {
+            assets: Vec::with_capacity(capacity),
+            fonts: HashMap::with_capacity(capacity),
+            images: HashMap::with_capacity(capacity),
+            svgs: HashMap::with_capacity(capacity),
+        }
+    }
+}
+
+/// Asset Map Methods
+pub trait AssetsMethods<T> {
+    /// Inserts a key-value pair into the map.
+    ///
+    /// If the map did not have this key present, None is returned.
+    fn insert(&mut self, k: &str, v: T) -> Option<T>;
+    /// Returns a reference to the value corresponding to the key.
+    fn get(&self, k: &str) -> Option<&T>;
+    /// Returns a mutable reference to the value corresponding to the key.
+    fn get_mut(&mut self, k: &str) -> Option<&mut T>;
     /// Removes a key from the map, returning the value at the key if the key was previously in the map.
-    pub fn remove(&mut self, k: &str) -> Option<Box<dyn Asset>> {
-        let v = self.assets.remove(k)
+    fn remove(&mut self, k: &str) -> Option<T>;
+}
+
+impl AssetsMethods<Font> for Assets {
+    fn insert(&mut self, k: &str, v: Font) -> Option<Font> {
+        self.assets.push(k.to_string());
+        self.fonts.insert(k.to_string(), v)
+    }
+    fn get(&self, k: &str) -> Option<&Font> {
+        self.fonts.get(k)
+    }
+    fn get_mut(&mut self, k: &str) -> Option<&mut Font> {
+        self.fonts.get_mut(k)
+    }
+    fn remove(&mut self, k: &str) -> Option<Font> {
+        self.fonts.remove(k)
+    }
+}
+
+impl AssetsMethods<Image> for Assets {
+    fn insert(&mut self, k: &str, v: Image) -> Option<Image> {
+        self.assets.push(k.to_string());
+        self.images.insert(k.to_string(), v)
+    }
+    fn get(&self, k: &str) -> Option<&Image> {
+        self.images.get(k)
+    }
+    fn get_mut(&mut self, k: &str) -> Option<&mut Image> {
+        self.images.get_mut(k)
+    }
+    fn remove(&mut self, k: &str) -> Option<Image> {
+        self.images.remove(k)
+    }
+}
+
+impl AssetsMethods<Svg> for Assets {
+    fn insert(&mut self, k: &str, v: Svg) -> Option<Svg> {
+        self.assets.push(k.to_string());
+        self.svgs.insert(k.to_string(), v)
+    }
+    fn get(&self, k: &str) -> Option<&Svg> {
+        self.svgs.get(k)
+    }
+    fn get_mut(&mut self, k: &str) -> Option<&mut Svg> {
+        self.svgs.get_mut(k)
+    }
+    fn remove(&mut self, k: &str) -> Option<Svg> {
+        self.svgs.remove(k)
     }
 }
