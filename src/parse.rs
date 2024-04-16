@@ -4,6 +4,11 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
 use std::path::*;
+//use std::borrow::Cow::Borrowed;
+use std::env::Args;
+use std::env;
+
+use crate::util::*;
 
 #[allow(unused_imports)]
 use crate::object::*;
@@ -54,16 +59,76 @@ pub struct ObjectInfo {
     pub offset: Option<(f64, f64)>,
 }
 
+/// Args Parser.qa
+pub fn parse_args(mut args: Args) -> PathBuf {
+    let file_from_arg;
+    if args.len() - 1 < 1 {
+        std::process::exit(1);
+    }
+    else {
+        file_from_arg = args.nth(1).unwrap();
+    }
+
+    let file_path = PathBuf::from(file_from_arg);
+    let mut file;
+    if file_path.is_relative() {
+        file = env::current_dir().unwrap();
+        file.push(file_path)
+    } else {
+        file = file_path
+    }
+
+    //let mut filename = Borrowed("rasm-design");
+    //let temp = file.clone();
+    //let tmp;
+    // if it's a directory use it as output name.
+    if file.is_dir() {
+        //filename = temp.file_name().unwrap().to_string_lossy();
+        file.push("Rasm.toml")
+    }
+    // if it's regular file use it as output name.
+    else if !file.ends_with(".manifest.toml") {
+        file.set_extension("manifest.toml");
+        if file.is_file() {
+            //tmp = temp.file_name().unwrap().to_string_lossy();
+            //filename = Borrowed(tmp.strip_suffix(".manifest.toml").unwrap())
+        }
+    } else {
+        panic!("Err")
+    }
+    file
+}
+
 /// Parses the Manifest file
-pub fn parse_manifest<T>(filename: T) -> Manifest
-where
-    T: AsRef<Path>,
-{
-    let f = File::open(filename).unwrap();
+pub fn parse_manifest(file: PathBuf) {
+    let f = File::open(&file).unwrap();
     let mut reader = BufReader::new(f);
 
-    let mut file = String::new();
-    let _ = reader.read_to_string(&mut file);
-    let manifest: Manifest = toml::from_str(&file).unwrap();
-    manifest
+    let mut read_file = String::new();
+    let _ = reader.read_to_string(&mut read_file);
+    let parsed_file = toml::from_str::<Manifest>(&read_file);
+    let manifest;
+    match parsed_file {
+        Ok(_manifest) => {
+            manifest = _manifest;
+        },
+        Err(err) => {
+            println!("{}", err.message());
+            println!("{:?}", err.span());
+            std::process::exit(1);
+        }
+    }
+    let mut canvas = Canvas::new(manifest.format, manifest.size[0], manifest.size[1]);
+    canvas.new_rect((0.0, 0.0), (100.0, 100.0), manifest.color);
+    if manifest.assets.is_some() {
+        parse_assets(manifest.assets.unwrap());
+    }
+    for object_info in manifest.objects {
+        match object_info.name.as_str() {
+            "rect" => parse_rect(&mut canvas, object_info),
+            "image" => parse_image(&mut canvas, object_info, file.clone()),
+            &_ => panic!("unknown object"),
+        }
+    }
+    canvas.save(file.to_str().unwrap());
 }

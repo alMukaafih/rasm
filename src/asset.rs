@@ -1,6 +1,7 @@
 //! This module defines assets loadable by the generator.
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::ops::{Index, IndexMut};
 
 use svg::node::element::tag::Path;
 use svg::parser::Event;
@@ -74,7 +75,7 @@ pub struct Font {
 }
 
 #[allow(dead_code)]
-/// Assets Map;
+/// Assets Map.
 pub struct Assets {
     assets: Vec<String>,
     fonts: HashMap<String, Font>,
@@ -101,9 +102,9 @@ impl Assets {
             svgs: HashMap::new(),
         }
     }
-    /// Creates an empty HashMap with at least the specified capacity.
+    /// Creates an empty Assets Map with at least the specified capacity.
     ///
-    /// The hash map will be able to hold at least capacity elements without reallocating. This method is allowed to allocate for more elements than capacity. If capacity is 0, the hash map will not allocate.
+    /// The assets map will be able to hold at least capacity elements without reallocating. This method is allowed to allocate for more elements than capacity. If capacity is 0, the hash map will not allocate.
     pub fn with_capacity(capacity: usize) -> Assets {
         Assets {
             assets: Vec::with_capacity(capacity),
@@ -143,6 +144,26 @@ impl AssetsMethods<Font> for Assets {
         self.fonts.remove(k)
     }
 }
+impl Index<&str> for Assets {
+    type Output = Font;
+
+    fn index(&self, idx: &str) -> &Self::Output {
+        let out = self.fonts.get(idx);
+        if out.is_none() {
+            panic!()
+        }
+        out.unwrap()
+    }
+}
+impl IndexMut<&str> for Assets {
+    fn index_mut(&mut self, idx: &str) -> &mut Self::Output {
+        let out = self.fonts.get_mut(idx);
+        if out.is_none() {
+            panic!()
+        }
+        out.unwrap()
+    }
+    }
 
 impl AssetsMethods<Image> for Assets {
     fn insert(&mut self, k: &str, v: Image) -> Option<Image> {

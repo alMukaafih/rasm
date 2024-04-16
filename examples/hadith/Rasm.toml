@@ -15,7 +15,7 @@ resize = [100, 0]
 name = "rect"
 color = [0, 150, 75, 255]
 origin = [50.4, 0]
-offset = [57, 100]
+offset = [57, 100,]
 [[objects]]
 name = "image"
 src = "back.png"
