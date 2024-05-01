@@ -27,7 +27,7 @@ impl Png {
     /// Creates a new Png Image.
     pub fn new(width: usize, height: usize,) -> Png {
         Png {
-            image: Image::with_dimensions(width, height),
+            image: Image::new(width, height),
             color_type: png::ColorType::Rgba,
             bit_depth: png::BitDepth::Eight,
         }
@@ -76,7 +76,7 @@ impl Jpg {
     /// Creates a new Jpg Image.
     pub fn new(width: usize, height: usize) -> Jpg {
         Jpg {
-            image: Image::with_dimensions(width, height),
+            image: Image::new(width, height),
             color_type: jpg::ColorType::Rgba,
         }
     }

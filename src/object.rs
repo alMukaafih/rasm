@@ -157,7 +157,7 @@ impl Rect {
     }
     /// Paste Rectangle on [Image]
     pub fn paste(&self, img: &mut Image) {
-        let mut layer = Layer::with_dimensions(img.width(), img.height());
+        let mut layer = Layer::new(img.width(), img.height());
         for rows in 0..self.height {
             for pixels in 0..self.width {
                 layer[self.origin[0] + rows][self.origin[1] + pixels] = self.color;

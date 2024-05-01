@@ -30,11 +30,11 @@ impl Pixel {
     /// Creates a new [Pixel] instance.
     pub fn new() -> Pixel {
         Pixel {
-            red: 0,
-            green: 0,
-            blue: 0,
-            alpha: 0,
-            count: 0,
+            red: 255,
+            green: 255,
+            blue: 255,
+            alpha: 255,
+            count: 255,
         }
     }
     /// Sets red value of [Pixel].
@@ -172,11 +172,7 @@ pub struct Row {
 }
 impl Row {
     /// Creates a new [Row] instance.
-    pub fn new() -> Row {
-        Row { pixels: vec![] }
-    }
-    /// Creates a [Row] with length.
-    pub fn with_length(length: usize) -> Row {
+    pub fn new(length: usize) -> Row {
         Row {
             pixels: vec![Pixel::new(); length],
         }
@@ -192,12 +188,12 @@ impl Row {
 }
 impl Default for Row {
     fn default() -> Self {
-        Self::new()
+        Self::new(1080)
     }
 }
 impl From<&[u8]> for Row {
     fn from(data: &[u8]) -> Row {
-        let mut row = Row::new();
+        let mut row = Row::new(0);
         for i in data.chunks_exact(4) {
             row.add_pixel(Pixel::from(i))
         }
@@ -250,19 +246,11 @@ pub struct Layer {
 }
 impl Layer {
     /// Creates a new [Layer] instance.
-    pub fn new() -> Layer {
-        Layer {
-            width: 0,
-            height: 0,
-            rows: vec![],
-        }
-    }
-    /// Creates a [Layer] with dimensions.
-    pub fn with_dimensions(width: usize, height: usize) -> Layer {
+    pub fn new(width: usize, height: usize) -> Layer {
         Layer {
             width,
             height,
-            rows: vec![Row::with_length(width); height],
+            rows: vec![Row::new(width); height],
         }
     }
     /// Adds a [Row] to Layer.
@@ -311,12 +299,12 @@ impl Layer {
 }
 impl Default for Layer {
     fn default() -> Self {
-        Self::new()
+        Self::new(1080, 1080)
     }
 }
 impl From<(usize, usize, Vec<u8>)> for Layer {
     fn from(image: (usize, usize, Vec<u8>)) -> Self {
-        let mut layer = Layer::new();
+        let mut layer = Layer::new(0,0);
         layer.width = image.0;
         layer.height = image.1;
         for i in image.2.chunks_exact(4 * image.0) {
@@ -328,7 +316,7 @@ impl From<(usize, usize, Vec<u8>)> for Layer {
 }
 impl From<(usize, usize, &[u8])> for Layer {
     fn from(image: (usize, usize, &[u8])) -> Self {
-        let mut layer = Layer::new();
+        let mut layer = Layer::new(0,0);
         layer.width = image.0;
         layer.height = image.1;
         for i in image.2.chunks_exact(4 * image.0) {
@@ -340,7 +328,7 @@ impl From<(usize, usize, &[u8])> for Layer {
 }
 impl From<(usize, &[u8])> for Layer {
     fn from(image: (usize, &[u8])) -> Self {
-        let mut layer = Layer::new();
+        let mut layer = Layer::new(0,0);
         layer.width = image.0;
         let mut x = 0;
         for i in image.1.chunks_exact(4 * image.0) {
@@ -403,21 +391,12 @@ pub struct Image {
 }
 impl Image {
     /// Creates a new [Image] instance.
-    pub fn new() -> Image {
-        Image {
-            width: 0,
-            height: 0,
-            origin: Point::from((0, 0)),
-            layers: vec![],
-        }
-    }
-    /// Creates an [Image] with given dimensions.
-    pub fn with_dimensions(width: usize, height: usize) -> Image {
+    pub fn new(width: usize, height: usize) -> Image {
         Image {
             width,
             height,
             origin: Point::from((0, 0)),
-            layers: vec![Layer::with_dimensions(width, height)],
+            layers: vec![Layer::new(width, height)],
         }
     }
     /// Collapses all layers to a single layer.
@@ -425,7 +404,7 @@ impl Image {
         if self.layers.len() == 1 {
             return;
         }
-        let mut img = Image::with_dimensions(self.width, self.height);
+        let mut img = Image::new(self.width, self.height);
         for layers in 0..self.layers.len() {
             for rows in 0..self[layers].height {
                 for pixels in 0..self[layers][rows].len() {
@@ -524,7 +503,7 @@ impl Image {
 }
 impl Default for Image {
     fn default() -> Self {
-        Self::new()
+        Self::new(1080, 1080)
     }
 }
 impl From<((usize, usize), (usize, usize), Vec<u8>)> for Image {
@@ -539,14 +518,14 @@ impl From<((usize, usize), (usize, usize), Vec<u8>)> for Image {
 }
 impl From<(usize, usize, &[u8])> for Image {
     fn from(image: (usize, usize, &[u8])) -> Self {
-        let mut img = Image::new();
+        let mut img = Image::new(0,0);
         img[0] = Layer::from(image);
         img
     }
 }
 impl From<(usize, &[u8])> for Image {
     fn from(image: (usize, &[u8])) -> Self {
-        let mut img = Image::new();
+        let mut img = Image::new(0,0);
         img[0] = Layer::from(image);
         img
     }
