@@ -1,5 +1,5 @@
 use crate::image::*;
-use crate::shape::*;
+use crate::object::*;
 
 use std::fs::File;
 use std::io::BufWriter;
