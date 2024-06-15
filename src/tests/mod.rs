@@ -7,7 +7,7 @@ use std::path::Path;
 
 #[test]
 fn create_png() {
-    let mut img = Image::with_dimensions(1080, 1080);
+    let mut img = Image::new(1080, 1080);
     let mut rect1 = Rect::with_coordinates((0, 0), (1080, 270));
     let mut rect2 = Rect::with_coordinates((0, 270), (1080, 540));
     let mut rect3 = Rect::with_coordinates((0, 540), (1080, 810));
